@@ -1,2 +1,1 @@
-"# Weather_app" 
-"# Weather_app" 
+Djaango weather app using OpenWeatherMap api
