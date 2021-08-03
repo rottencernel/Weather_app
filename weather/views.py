@@ -3,9 +3,12 @@ from urllib.error import HTTPError
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from .forms import ContactForm, CreateUserForm
+from django.contrib.auth.decorators import login_required
+from .forms import ContactForm, CreateUserForm, CodeForm
+from .models import CustomUser
 from django.contrib import messages
 from decouple import config
+from .sms import send_sms_code
 import urllib.request
 import json
 
@@ -31,18 +34,47 @@ def registerPage(request):
         return render(request, 'register.html', context)
 
 
-def loginPage(request):
+def auth(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
-            return redirect('home')
+            request.session['pk'] = user.pk
+            return redirect('verify')
         else:
-            messages.info(request, 'Username or Password is incrrect')
+            messages.info(request, 'Username or Password is incorrect')
 
-    return render(request, 'login.html', {})
+    return render(request, 'auth.html', {})
+
+
+def verify(request):
+    form = CodeForm(request.POST or None)
+    pk = request.session.get('pk')
+    if pk:
+        user = CustomUser.objects.get(pk=pk)
+        user_number = user.phone_number
+        code = user.code
+        code_user = f'{user.username}: {user.code}'
+
+        if not request.POST:
+            try:
+                send_sms_code(user_number, code)
+            except:
+                messages.info(request, 'Sorry, something went wrong... Try again later')
+
+        if form.is_valid():
+            num = form.cleaned_data.get('number')
+            print(num)
+            if str(code) == num:
+                code.save()
+                login(request, user)
+                return redirect('subscribe')
+            else:
+                messages.info(request, 'Code is incorrect')
+                return redirect('login')
+
+    return render(request, 'verify.html', {'form': form})
 
 
 def logoutUser(request):
@@ -51,7 +83,7 @@ def logoutUser(request):
 
 
 def home(request):
-    return render(request, 'home.html', {})
+    return render(request, 'home.html')
 
 
 def weather(request):
@@ -140,6 +172,7 @@ def contact(request):
                 return HttpResponse('Invalid header found.')
 
             return redirect('success')
+
     return render(request, "contact.html", {'form': form})
 
 
@@ -147,5 +180,12 @@ def success(request):
     return render(request, 'success.html')
 
 
+@login_required
+def subscribe(request):
+    return render(request, 'subscription.html', {})
+
+
 def handler_not_found(request, exception):
     return render(request, '404page.html')
+
+

@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Code, CustomUser
 
 
 class ContactForm(forms.Form):
@@ -11,5 +12,14 @@ class ContactForm(forms.Form):
 
 class CreateUserForm(UserCreationForm):
     class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        model = CustomUser
+        fields = ['username', 'email', 'password1', 'password2', 'phone_number']
+
+
+class CodeForm(forms.ModelForm):
+    number = forms.CharField(label=Code, help_text='Enter SMS verification code')
+
+    class Meta:
+        model = Code
+        fields = ('number',)
+

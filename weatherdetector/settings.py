@@ -36,12 +36,14 @@ EMAIL_USE_TLS = True
 
 ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation
 
-ALLOWED_HOSTS = []
+SMS_BACKEND = 'sms.backends.vonage.SmsBackend'
 
+ALLOWED_HOSTS = []
 
 # Application definition
 
 INSTALLED_APPS = [
+    # 'weather.apps.WeatherConfig'
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,6 +52,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'weather',
 ]
+
+
+AUTH_USER_MODEL = 'weather.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
