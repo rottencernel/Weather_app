@@ -53,6 +53,12 @@ INSTALLED_APPS = [
     'weather',
 ]
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'weather_cache'),
+    }
+}
 
 AUTH_USER_MODEL = 'weather.CustomUser'
 
